@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Equipos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          stone: {
+            950: '#141414',
+            900: '#1c1b19',
+            800: '#2a2825',
+            700: '#3a3733',
+            600: '#4f4b45',
+            500: '#6b665e',
+          },
+          emerald: {
+            500: '#2fbf6e',
+            600: '#1f9e57',
+            700: '#157a42',
+          },
+          netherite: {
+            500: '#c1432f',
+            600: '#9e2f20',
+            700: '#7a2318',
+          },
+          gold: {
+            400: '#e8c34a',
+            500: '#d1a930',
+          }
+        },
+        fontFamily: {
+          pixel: ['"Press Start 2P"', 'monospace'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  * { image-rendering: pixelated; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: #1c1b19;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 2px, transparent 2px, transparent 32px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 2px, transparent 2px, transparent 32px);
+    background-size: 32px 32px;
+  }
+  .block-border {
+    border-style: solid;
+    border-width: 4px;
+    border-image-slice: 2;
+    border-image-width: 4px;
+    border-image-repeat: stretch;
+    border-image-source: linear-gradient(135deg, #6b665e 0%, #3a3733 40%, #141414 100%);
+    box-shadow: inset 0 0 0 2px #141414, 0 6px 0 rgba(0,0,0,0.45);
+  }
+  .btn-pixel {
+    border-width: 3px;
+    border-style: solid;
+    border-image-slice: 2;
+    border-image-width: 3px;
+    box-shadow: inset -2px -3px 0 rgba(0,0,0,0.35), inset 2px 2px 0 rgba(255,255,255,0.12);
+    transition: transform .05s ease, box-shadow .05s ease;
+  }
+  .btn-pixel:active {
+    transform: translateY(2px);
+    box-shadow: inset -1px -1px 0 rgba(0,0,0,0.35);
+  }
+  .btn-emerald {
+    background: #1f9e57;
+    border-image-source: linear-gradient(135deg,#2fbf6e,#157a42);
+    color: #eafff2;
+  }
+  .btn-emerald:hover { background:#248f4f; }
+  .btn-netherite {
+    background: #9e2f20;
+    border-image-source: linear-gradient(135deg,#c1432f,#7a2318);
+    color: #ffeeea;
+  }
+  .btn-netherite:hover { background:#8a291d; }
+  .btn-stone {
+    background:#3a3733;
+    border-image-source: linear-gradient(135deg,#6b665e,#1c1b19);
+    color:#e9e5dd;
+  }
+  .btn-stone:hover { background:#43403b; }
+  .btn-gold {
+    background: #b8901f;
+    border-image-source: linear-gradient(135deg,#e8c34a,#7a5f14);
+    color: #2a1f04;
+  }
+  .btn-gold:hover { background:#a67f1b; }
+  .badge-perk {
+    border-width: 2px;
+    border-style: solid;
+    font-size: 0.68rem;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 10px; height:10px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background:#141414; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background:#4f4b45; border:2px solid #141414; }
+  ::selection { background:#1f9e57; color:#fff; }
+  .heading-pixel { font-family:'Press Start 2P', monospace; letter-spacing: 0.5px; }
+  @keyframes pop-in { from { opacity:0; transform: scale(.95) translateY(6px);} to {opacity:1; transform:scale(1) translateY(0);} }
+  .pop-in { animation: pop-in .12s ease-out; }
+</style>
+</head>
+<body class="min-h-screen text-stone-100 pb-16">
+
+<!-- ===================== HEADER ===================== -->
+<header class="border-b-4 border-stone-950 bg-stone-900/90 sticky top-0 z-30 backdrop-blur-sm">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-emerald-600 block-border flex items-center justify-center text-lg">⛏</div>
+      <div>
+        <h1 class="heading-pixel text-sm md:text-base text-gold-400">UHC PANEL</h1>
+        <p class="text-stone-500 text-xs mt-1">Gestión de equipos · Ventajas EP1 · Desventajas EP5</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-stone-500">jugadores:</span>
+      <span id="stat-players" class="text-emerald-500 font-bold">0</span>
+      <span class="text-stone-600">/</span>
+      <span class="text-stone-500">equipos:</span>
+      <span id="stat-teams" class="text-gold-400 font-bold">2</span>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 md:px-6 mt-6 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+
+  <!-- ===================== SIDEBAR: JUGADORES + CONTROLES ===================== -->
+  <aside class="space-y-6">
+
+    <!-- Añadir jugadores -->
+    <section class="bg-stone-800 block-border p-4">
+      <h2 class="heading-pixel text-[10px] text-emerald-500 mb-3">añadir jugador</h2>
+      <form id="form-add-player" class="flex gap-2">
+        <input id="input-player-name" type="text" placeholder="nick del jugador"
+          class="flex-1 min-w-0 bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-3 py-2 text-sm text-stone-100 placeholder-stone-600"
+          maxlength="24" autocomplete="off">
+        <button type="submit" class="btn-pixel btn-emerald px-3 text-sm shrink-0">+</button>
+      </form>
+      <p class="text-stone-600 text-[11px] mt-2">enter también añade al jugador</p>
+    </section>
+
+    <!-- Control de equipos -->
+    <section class="bg-stone-800 block-border p-4">
+      <h2 class="heading-pixel text-[10px] text-gold-400 mb-3">equipos</h2>
+      <div class="flex items-center gap-2 mb-3">
+        <button id="btn-team-minus" class="btn-pixel btn-stone w-9 h-9 text-lg leading-none">−</button>
+        <div class="flex-1 text-center bg-stone-950 border-2 border-stone-700 py-2 text-sm">
+          <span id="team-count-display" class="font-bold">2</span> equipos
+        </div>
+        <button id="btn-team-plus" class="btn-pixel btn-stone w-9 h-9 text-lg leading-none">+</button>
+      </div>
+      <button id="btn-shuffle" class="btn-pixel btn-emerald w-full py-2 text-xs">🎲 sortear equipos</button>
+      <button id="btn-shuffle-ep1" class="btn-pixel btn-gold w-full py-2 text-xs mt-2">🟢 repartir ep1 al azar</button>
+      <button id="btn-shuffle-ep5" class="btn-pixel btn-gold w-full py-2 text-xs mt-2">🔴 repartir ep5 al azar</button>
+      <button id="btn-clear-perks" class="btn-pixel btn-stone w-full py-2 text-xs mt-2">🚫 quitar todos los perks</button>
+      <button id="btn-reset" class="btn-pixel btn-netherite w-full py-2 text-xs mt-2">reiniciar panel</button>
+    </section>
+
+    <!-- Jugadores sin asignar -->
+    <section class="bg-stone-800 block-border p-4">
+      <h2 class="heading-pixel text-[10px] text-stone-300 mb-3">sin equipo</h2>
+      <div id="unassigned-list" class="flex flex-wrap gap-2 min-h-[3rem]"></div>
+      <p id="unassigned-empty" class="text-stone-600 text-xs italic">no hay jugadores libres</p>
+    </section>
+
+    <!-- Catálogo de referencia -->
+    <section class="bg-stone-800 block-border p-4">
+      <details>
+        <summary class="heading-pixel text-[10px] text-stone-300 cursor-pointer select-none">catálogo de perks</summary>
+        <div class="mt-3 space-y-3 max-h-72 overflow-y-auto scrollbar-thin pr-1">
+          <div>
+            <p class="text-emerald-500 text-xs font-bold mb-1">🟢 ep1 · beneficios</p>
+            <ul id="catalog-ep1" class="text-[11px] text-stone-400 space-y-1"></ul>
+          </div>
+          <div>
+            <p class="text-netherite-500 text-xs font-bold mb-1">🔴 ep5 · desventajas</p>
+            <ul id="catalog-ep5" class="text-[11px] text-stone-400 space-y-1"></ul>
+          </div>
+        </div>
+      </details>
+    </section>
+
+  </aside>
+
+  <!-- ===================== EQUIPOS ===================== -->
+  <section>
+    <div id="teams-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+  </section>
+
+</main>
+
+<!-- ===================== MODAL SELECTOR DE PERKS ===================== -->
+<div id="perk-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+  <div class="bg-stone-900 block-border w-full max-w-md max-h-[80vh] flex flex-col pop-in">
+    <div class="flex items-center justify-between px-4 py-3 border-b-2 border-stone-700">
+      <h3 id="modal-title" class="heading-pixel text-[10px]">seleccionar perk</h3>
+      <button id="modal-close" class="text-stone-400 hover:text-stone-100 text-lg leading-none px-2">✕</button>
+    </div>
+    <div id="modal-list" class="overflow-y-auto scrollbar-thin p-3 space-y-2"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL DE CONFIRMACIÓN ===================== -->
+<div id="confirm-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+  <div class="bg-stone-900 block-border w-full max-w-sm pop-in">
+    <div class="px-4 py-3 border-b-2 border-stone-700">
+      <h3 class="heading-pixel text-[10px] text-netherite-500">confirmar</h3>
+    </div>
+    <div class="p-4">
+      <p id="confirm-message" class="text-sm text-stone-200 mb-4"></p>
+      <div class="flex gap-2 justify-end">
+        <button id="confirm-cancel" class="btn-pixel btn-stone px-4 py-2 text-xs">cancelar</button>
+        <button id="confirm-accept" class="btn-pixel btn-netherite px-4 py-2 text-xs">reiniciar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- DATOS PREDEFINIDOS ----------
+  const EP1 = [
+    { id:"selvesha", name:"Selvesha", desc:"Kit de potis completo + saturación" },
+    { id:"golem", name:"Golem", desc:"Lentitud 1, Resistencia 3" },
+    { id:"midas", name:"Midas", desc:"20 bloques de oro + Suerte 1" },
+    { id:"gambling", name:"Gambling", desc:"20 llaves y 20 vaults de trial" },
+    { id:"flash", name:"Flash", desc:"Velocidad 2" },
+    { id:"goje1", name:"Goje", desc:"5 hypers + Health Boost 4 + Glowing" },
+    { id:"lnd", name:"Leyends never die", desc:"3 totems + Absorción 4" },
+    { id:"mago", name:"Mago", desc:"Kit enchants completo" },
+    { id:"armero", name:"Armero", desc:"5 lingotes de netherite + Ignífugo" },
+    { id:"comercial", name:"Comercial", desc:"64 bloques de esmeralda + Héroe de la aldea 1" },
+    { id:"boxeador", name:"Boxeador", desc:"Fuerza 1 + Haste 1" },
+    { id:"rubius", name:"Rubius", desc:"Fortuna 2 en la piqueta + Night Vision" },
+  ];
+
+  const EP5 = [
+    { id:"xd", name:"XD", desc:"Te dejan a medio corazón" },
+    { id:"navidad", name:"Navidad", desc:"Glowing" },
+    { id:"barcelona", name:"Barcelona", desc:"Te roban todo el healing (no el material)" },
+    { id:"gafas", name:"Bro ponte las gafas", desc:"Ceguera por un episodio entero" },
+    { id:"sida", name:"Sida", desc:"Debilidad 1" },
+    { id:"tomarculo", name:"A tomar por culo", desc:"TP a coordenadas random del mapa" },
+    { id:"piedra", name:"Edad de piedra", desc:"Mining fatigue por un EP entero" },
+    { id:"odisea", name:"Odisea", desc:"Mal presagio 1" },
+    { id:"goje5", name:"Goje", desc:"Lentitud 1, Hambre 1" },
+    { id:"redbull", name:"Tercer redbull", desc:"Jump Boost 2" },
+    { id:"sarna", name:"Sarna", desc:"Cada episodio recibes Instant Damage 1" },
+    { id:"trebol", name:"Trebol de 3 hojas", desc:"Mala suerte 2" },
+  ];
+
+  const TEAM_COLORS = [
+    { bar:"bg-emerald-600", text:"text-emerald-500", ring:"border-emerald-600" },
+    { bar:"bg-netherite-600", text:"text-netherite-500", ring:"border-netherite-600" },
+    { bar:"bg-gold-500", text:"text-gold-400", ring:"border-gold-500" },
+    { bar:"bg-stone-500", text:"text-stone-300", ring:"border-stone-500" },
+    { bar:"bg-emerald-700", text:"text-emerald-500", ring:"border-emerald-700" },
+    { bar:"bg-netherite-700", text:"text-netherite-500", ring:"border-netherite-700" },
+  ];
+
+  // ---------- ESTADO ----------
+  const STORAGE_KEY = "uhc_panel_state_v1";
+  let state = loadState() || {
+    players: [],       // { id, name, team: number|null, ep1: id|null, ep5: id|null }
+    teamCount: 2,
+    teamNames: {}       // { teamIndex: "nombre custom" }
+  };
+
+  function loadState(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){ return null; }
+  }
+  function saveState(){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
+  }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+
+  // ---------- REFERENCIAS DOM ----------
+  const els = {
+    form: document.getElementById("form-add-player"),
+    input: document.getElementById("input-player-name"),
+    unassignedList: document.getElementById("unassigned-list"),
+    unassignedEmpty: document.getElementById("unassigned-empty"),
+    teamsGrid: document.getElementById("teams-grid"),
+    teamCountDisplay: document.getElementById("team-count-display"),
+    btnPlus: document.getElementById("btn-team-plus"),
+    btnMinus: document.getElementById("btn-team-minus"),
+    btnShuffle: document.getElementById("btn-shuffle"),
+    btnShuffleEp1: document.getElementById("btn-shuffle-ep1"),
+    btnShuffleEp5: document.getElementById("btn-shuffle-ep5"),
+    btnClearPerks: document.getElementById("btn-clear-perks"),
+    btnReset: document.getElementById("btn-reset"),
+    statPlayers: document.getElementById("stat-players"),
+    statTeams: document.getElementById("stat-teams"),
+    catalogEp1: document.getElementById("catalog-ep1"),
+    catalogEp5: document.getElementById("catalog-ep5"),
+    modal: document.getElementById("perk-modal"),
+    modalTitle: document.getElementById("modal-title"),
+    modalList: document.getElementById("modal-list"),
+    modalClose: document.getElementById("modal-close"),
+    confirmModal: document.getElementById("confirm-modal"),
+    confirmMessage: document.getElementById("confirm-message"),
+    confirmAccept: document.getElementById("confirm-accept"),
+    confirmCancel: document.getElementById("confirm-cancel"),
+  };
+
+  // ---------- CATÁLOGO LATERAL ----------
+  function renderCatalog(){
+    els.catalogEp1.innerHTML = EP1.map(p =>
+      `<li><span class="text-emerald-400 font-bold">${escapeHtml(p.name)}:</span> ${escapeHtml(p.desc)}</li>`
+    ).join("");
+    els.catalogEp5.innerHTML = EP5.map(p =>
+      `<li><span class="text-netherite-500 font-bold">${escapeHtml(p.name)}:</span> ${escapeHtml(p.desc)}</li>`
+    ).join("");
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[s]));
+  }
+
+  function perkById(list, id){ return list.find(p => p.id === id) || null; }
+
+  // ---------- RENDER PRINCIPAL ----------
+  function render(){
+    els.teamCountDisplay.textContent = state.teamCount;
+    els.statTeams.textContent = state.teamCount;
+    els.statPlayers.textContent = state.players.length;
+
+    renderUnassigned();
+    renderTeams();
+    saveState();
+  }
+
+  function renderUnassigned(){
+    const unassigned = state.players.filter(p => p.team === null);
+    els.unassignedEmpty.classList.toggle("hidden", unassigned.length > 0);
+    els.unassignedList.innerHTML = unassigned.map(p => playerChipHtml(p)).join("");
+
+    els.unassignedList.querySelectorAll("[data-assign]").forEach(sel => {
+      sel.addEventListener("change", e => {
+        const pid = e.target.getAttribute("data-assign");
+        const team = e.target.value;
+        if (team === "") return;
+        setPlayerTeam(pid, Number(team));
+      });
+    });
+    els.unassignedList.querySelectorAll("[data-remove]").forEach(btn => {
+      btn.addEventListener("click", e => removePlayer(e.currentTarget.getAttribute("data-remove")));
+    });
+  }
+
+  function playerChipHtml(p){
+    let options = `<option value="">mover a...</option>`;
+    for (let i=0;i<state.teamCount;i++){
+      options += `<option value="${i}">${escapeHtml(teamName(i))}</option>`;
+    }
+    return `
+      <div class="flex items-center gap-1 bg-stone-950 border-2 border-stone-700 pl-3 pr-1 py-1.5 text-xs">
+        <span class="mr-1">${escapeHtml(p.name)}</span>
+        <select data-assign="${p.id}" class="bg-stone-800 border border-stone-600 text-[10px] px-1 py-0.5 outline-none">
+          ${options}
+        </select>
+        <button data-remove="${p.id}" class="text-stone-500 hover:text-netherite-500 px-1" title="eliminar">✕</button>
+      </div>`;
+  }
+
+  function teamName(i){
+    return state.teamNames[i] || `Equipo ${i+1}`;
+  }
+
+  function renderTeams(){
+    let html = "";
+    for (let i=0;i<state.teamCount;i++){
+      const color = TEAM_COLORS[i % TEAM_COLORS.length];
+      const members = state.players.filter(p => p.team === i);
+      html += `
+        <div class="bg-stone-800 block-border flex flex-col">
+          <div class="${color.bar} px-3 py-2 flex items-center justify-between border-b-4 border-stone-950">
+            <input data-team-name="${i}" value="${escapeHtml(teamName(i))}"
+              class="bg-transparent font-bold text-sm text-stone-950 outline-none w-full mr-2 heading-pixel-off"
+              maxlength="18">
+            <span class="text-stone-950/70 text-xs shrink-0">${members.length}</span>
+          </div>
+          <div class="p-3 space-y-2 min-h-[4rem] flex-1">
+            ${members.length ? members.map(m => memberRowHtml(m, color)).join("") : `<p class="text-stone-600 text-xs italic">arrastra jugadores aquí desde "sin equipo"</p>`}
+          </div>
+        </div>`;
+    }
+    els.teamsGrid.innerHTML = html;
+
+    // listeners: nombre de equipo
+    els.teamsGrid.querySelectorAll("[data-team-name]").forEach(inp => {
+      inp.addEventListener("change", e => {
+        const idx = Number(e.target.getAttribute("data-team-name"));
+        state.teamNames[idx] = e.target.value.trim() || `Equipo ${idx+1}`;
+        render();
+      });
+    });
+    // listeners: perk buttons
+    els.teamsGrid.querySelectorAll("[data-open-perk]").forEach(btn => {
+      btn.addEventListener("click", e => {
+        const t = e.currentTarget;
+        openPerkModal(t.getAttribute("data-open-perk"), t.getAttribute("data-type"));
+      });
+    });
+    // listeners: quitar del equipo
+    els.teamsGrid.querySelectorAll("[data-unassign]").forEach(btn => {
+      btn.addEventListener("click", e => setPlayerTeam(e.currentTarget.getAttribute("data-unassign"), null));
+    });
+    // listeners: eliminar jugador
+    els.teamsGrid.querySelectorAll("[data-remove]").forEach(btn => {
+      btn.addEventListener("click", e => removePlayer(e.currentTarget.getAttribute("data-remove")));
+    });
+  }
+
+  function memberRowHtml(p, color){
+    const ep1 = p.ep1 ? perkById(EP1, p.ep1) : null;
+    const ep5 = p.ep5 ? perkById(EP5, p.ep5) : null;
+    return `
+      <div class="bg-stone-950 border-2 border-stone-700 p-2">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-sm font-medium truncate">${escapeHtml(p.name)}</span>
+          <div class="flex items-center gap-1 shrink-0">
+            <button data-unassign="${p.id}" class="text-stone-500 hover:text-gold-400 text-xs px-1" title="quitar del equipo">↩</button>
+            <button data-remove="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1" title="eliminar jugador">✕</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          <button data-open-perk="${p.id}" data-type="ep1"
+            class="badge-perk px-2 py-1 ${ep1 ? 'bg-emerald-700 border-emerald-500 text-emerald-50' : 'bg-stone-800 border-stone-600 text-stone-500'} hover:border-emerald-500">
+            🟢 ${ep1 ? escapeHtml(ep1.name) : "asignar ep1"}
+          </button>
+          <button data-open-perk="${p.id}" data-type="ep5"
+            class="badge-perk px-2 py-1 ${ep5 ? 'bg-netherite-700 border-netherite-500 text-red-50' : 'bg-stone-800 border-stone-600 text-stone-500'} hover:border-netherite-500">
+            🔴 ${ep5 ? escapeHtml(ep5.name) : "asignar ep5"}
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // ---------- MODAL DE PERKS ----------
+  let modalCtx = { playerId:null, type:null };
+
+  function openPerkModal(playerId, type){
+    modalCtx = { playerId, type };
+    const list = type === "ep1" ? EP1 : EP5;
+    const player = state.players.find(p => p.id === playerId);
+    const current = player ? player[type] : null;
+    const accent = type === "ep1" ? "emerald" : "netherite";
+
+    els.modalTitle.textContent = (type === "ep1" ? "🟢 cambiar beneficio ep1 — " : "🔴 cambiar desventaja ep5 — ") + (player ? player.name : "");
+    els.modalList.innerHTML = list.map(p => `
+      <button data-perk-choice="${p.id}"
+        class="w-full text-left px-3 py-2 border-2 ${current===p.id ? `border-${accent}-500 bg-${accent}-700/40` : 'border-stone-700 bg-stone-950'} hover:border-${accent}-500 text-xs">
+        <span class="font-bold ${accent==='emerald' ? 'text-emerald-400':'text-netherite-500'}">${escapeHtml(p.name)}</span>
+        <div class="text-stone-400 mt-0.5">${escapeHtml(p.desc)}</div>
+      </button>
+    `).join("");
+
+    els.modalList.querySelectorAll("[data-perk-choice]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const choice = btn.getAttribute("data-perk-choice");
+        assignPerk(modalCtx.playerId, modalCtx.type, choice);
+        closeModal();
+      });
+    });
+
+    els.modal.classList.remove("hidden");
+    els.modal.classList.add("flex");
+  }
+
+  function closeModal(){
+    els.modal.classList.add("hidden");
+    els.modal.classList.remove("flex");
+  }
+
+  els.modalClose.addEventListener("click", closeModal);
+  els.modal.addEventListener("click", e => { if (e.target === els.modal) closeModal(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeModal(); hideConfirm(); }
+  });
+
+  function assignPerk(playerId, type, perkId){
+    const p = state.players.find(pl => pl.id === playerId);
+    if (!p) return;
+    p[type] = perkId;
+    render();
+  }
+
+  // ---------- ACCIONES SOBRE JUGADORES ----------
+  function pickPerkFor(type){
+    // Elige un perk que ningún jugador tenga todavía (para que el reparto no
+    // se repita mientras queden opciones libres); si ya están todas en uso,
+    // elige uno al azar entre todas.
+    const list = type === "ep1" ? EP1 : EP5;
+    const used = new Set(state.players.map(p => p[type]).filter(Boolean));
+    const free = list.filter(p => !used.has(p.id));
+    const pool = free.length ? free : list;
+    return pool[Math.floor(Math.random() * pool.length)].id;
+  }
+
+  function addPlayer(name){
+    name = name.trim();
+    if (!name) return;
+    if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+      flashInputError();
+      return;
+    }
+    // Cada jugador siempre lleva exactamente 1 ventaja (EP1) y 1 desventaja (EP5).
+    const player = { id: uid(), name, team: null, ep1: null, ep5: null };
+    player.ep1 = pickPerkFor("ep1");
+    player.ep5 = pickPerkFor("ep5");
+    state.players.push(player);
+    render();
+  }
+
+  function flashInputError(){
+    els.input.classList.add("border-netherite-500");
+    setTimeout(() => els.input.classList.remove("border-netherite-500"), 500);
+  }
+
+  function removePlayer(id){
+    state.players = state.players.filter(p => p.id !== id);
+    render();
+  }
+
+  function setPlayerTeam(id, team){
+    const p = state.players.find(pl => pl.id === id);
+    if (!p) return;
+    p.team = team;
+    render();
+  }
+
+  function changeTeamCount(delta){
+    const next = Math.max(1, Math.min(12, state.teamCount + delta));
+    if (next === state.teamCount) return;
+    if (next < state.teamCount){
+      state.players.forEach(p => { if (p.team !== null && p.team >= next) p.team = null; });
+    }
+    state.teamCount = next;
+    render();
+  }
+
+  function shuffleTeams(){
+    const ids = state.players.map(p => p.id);
+    for (let i = ids.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    ids.forEach((id, idx) => {
+      const p = state.players.find(pl => pl.id === id);
+      p.team = idx % state.teamCount;
+    });
+    render();
+  }
+
+  function shuffledBag(list, size){
+    // Genera un array de `size` perks tomados de `list`, agotando cada perk
+    // antes de repetirlo (si hay más jugadores que perks, se vuelve a barajar).
+    const result = [];
+    let bag = [];
+    while (result.length < size){
+      if (bag.length === 0){
+        bag = list.map(p => p.id);
+        for (let i = bag.length - 1; i > 0; i--){
+          const j = Math.floor(Math.random() * (i+1));
+          [bag[i], bag[j]] = [bag[j], bag[i]];
+        }
+      }
+      result.push(bag.pop());
+    }
+    return result;
+  }
+
+  function shufflePerksByType(type){
+    if (state.players.length === 0) return;
+    const list = type === "ep1" ? EP1 : EP5;
+    const bag = shuffledBag(list, state.players.length);
+    state.players.forEach((p, idx) => { p[type] = bag[idx]; });
+    render();
+  }
+
+  function clearAllPerks(){
+    if (state.players.length === 0) return;
+    showConfirm("¿Quitar TODOS los EP1 y EP5 asignados a todos los jugadores?", () => {
+      state.players.forEach(p => { p.ep1 = null; p.ep5 = null; });
+      render();
+    });
+  }
+
+  function resetPanel(){
+    showConfirm("¿Reiniciar todo el panel? Se perderán jugadores, equipos y perks asignados.", () => {
+      state = { players: [], teamCount: 2, teamNames: {} };
+      render();
+    });
+  }
+
+  // ---------- MODAL DE CONFIRMACIÓN (propio, sin depender de confirm() nativo) ----------
+  let confirmAcceptHandler = null;
+  let confirmCancelHandler = null;
+
+  function showConfirm(message, onAccept){
+    els.confirmMessage.textContent = message;
+    els.confirmModal.classList.remove("hidden");
+    els.confirmModal.classList.add("flex");
+
+    if (confirmAcceptHandler) els.confirmAccept.removeEventListener("click", confirmAcceptHandler);
+    if (confirmCancelHandler) els.confirmCancel.removeEventListener("click", confirmCancelHandler);
+
+    confirmAcceptHandler = () => { hideConfirm(); onAccept(); };
+    confirmCancelHandler = () => { hideConfirm(); };
+
+    els.confirmAccept.addEventListener("click", confirmAcceptHandler);
+    els.confirmCancel.addEventListener("click", confirmCancelHandler);
+  }
+
+  function hideConfirm(){
+    els.confirmModal.classList.add("hidden");
+    els.confirmModal.classList.remove("flex");
+  }
+
+  els.confirmModal.addEventListener("click", e => { if (e.target === els.confirmModal) hideConfirm(); });
+
+  // ---------- EVENTOS GLOBALES ----------
+  els.form.addEventListener("submit", e => {
+    e.preventDefault();
+    addPlayer(els.input.value);
+    els.input.value = "";
+    els.input.focus();
+  });
+
+  els.btnPlus.addEventListener("click", () => changeTeamCount(1));
+  els.btnMinus.addEventListener("click", () => changeTeamCount(-1));
+  els.btnShuffle.addEventListener("click", shuffleTeams);
+  els.btnShuffleEp1.addEventListener("click", () => shufflePerksByType("ep1"));
+  els.btnShuffleEp5.addEventListener("click", () => shufflePerksByType("ep5"));
+  els.btnClearPerks.addEventListener("click", clearAllPerks);
+  els.btnReset.addEventListener("click", resetPanel);
+
+  // ---------- INIT ----------
+  renderCatalog();
+  render();
+})();
+</script>
+</body>
+</html>
