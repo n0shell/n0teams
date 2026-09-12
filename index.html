@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UHC PANEL — Gestión Pública con Import/Export</title>
+<title>PANEL DE EQUIPOS — Gestión General con Animaciones</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -50,48 +50,67 @@
     border-image-slice: 2;
     border-image-width: 3px;
     box-shadow: inset -2px -3px 0 rgba(0,0,0,0.35), inset 2px 2px 0 rgba(255,255,255,0.12);
-    transition: transform .05s ease, box-shadow .05s ease;
+    transition: transform .08s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .08s cubic-bezier(0.4, 0, 0.2, 1), filter .15s ease;
   }
-  .btn-pixel:active {
-    transform: translateY(2px);
-    box-shadow: inset -1px -1px 0 rgba(0,0,0,0.35);
-  }
+  .btn-pixel:hover { filter: brightness(1.1); }
+  .btn-pixel:active { transform: translateY(2px); box-shadow: inset -1px -1px 0 rgba(0,0,0,0.35); }
   .btn-emerald { background: #1f9e57; border-image-source: linear-gradient(135deg,#2fbf6e,#157a42); color: #eafff2; }
-  .btn-emerald:hover { background:#248f4f; }
   .btn-netherite { background: #9e2f20; border-image-source: linear-gradient(135deg,#c1432f,#7a2318); color: #ffeeea; }
-  .btn-netherite:hover { background:#8a291d; }
   .btn-stone { background:#3a3733; border-image-source: linear-gradient(135deg,#6b665e,#1c1b19); color:#e9e5dd; }
-  .btn-stone:hover { background:#43403b; }
   .btn-gold { background: #b8901f; border-image-source: linear-gradient(135deg,#e8c34a,#7a5f14); color: #2a1f04; }
-  .btn-gold:hover { background:#a67f1b; }
-  .badge-perk { border-width: 2px; border-style: solid; font-size: 0.68rem; }
+  
+  .badge-perk { border-width: 2px; border-style: solid; font-size: 0.68rem; transition: all .15s ease; }
+  .badge-perk:hover { transform: translateY(-1px); filter: brightness(1.15); }
+
   .scrollbar-thin::-webkit-scrollbar { width: 10px; height:10px; }
   .scrollbar-thin::-webkit-scrollbar-track { background:#141414; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background:#4f4b45; border:2px solid #141414; }
   ::selection { background:#1f9e57; color:#fff; }
   .heading-pixel { font-family:'Press Start 2P', monospace; letter-spacing: 0.5px; }
-  @keyframes pop-in { from { opacity:0; transform: scale(.95) translateY(6px);} to {opacity:1; transform:scale(1) translateY(0);} }
-  .pop-in { animation: pop-in .12s ease-out; }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.9) translateY(8px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-pop { animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .animate-fade { animation: fadeIn 0.15s ease-out forwards; }
+  .chip-transition { transition: all 0.2s ease-in-out; }
 </style>
 </head>
 <body class="min-h-screen text-stone-100 pb-16">
 
 <!-- ===================== HEADER ===================== -->
-<header class="border-b-4 border-stone-950 bg-stone-900/90 sticky top-0 z-30 backdrop-blur-sm">
+<header class="border-b-4 border-stone-950 bg-stone-900/90 sticky top-0 z-30 backdrop-blur-md">
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-emerald-600 block-border flex items-center justify-center text-lg">⛏</div>
+      <div class="w-10 h-10 bg-emerald-600 block-border flex items-center justify-center text-lg animate-pulse">⚙</div>
       <div>
-        <h1 class="heading-pixel text-sm md:text-base text-gold-400">UHC PANEL — PÚBLICO</h1>
-        <p class="text-stone-500 text-xs mt-1">gestión de equipos · perks personalizados · export/import config</p>
+        <h1 class="heading-pixel text-sm md:text-base text-gold-400">PANEL DE EQUIPOS</h1>
+        <p class="text-stone-500 text-xs mt-1">gestión de participantes · atributos personalizados · export/import config</p>
       </div>
     </div>
-    <div class="flex items-center gap-2 text-xs">
-      <span class="text-stone-500">jugadores:</span>
-      <span id="stat-players" class="text-emerald-500 font-bold">0</span>
-      <span class="text-stone-600">/</span>
-      <span class="text-stone-500">equipos:</span>
-      <span id="stat-teams" class="text-gold-400 font-bold">2</span>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-stone-500">participantes:</span>
+        <span id="stat-players" class="text-emerald-500 font-bold transition-all duration-300">0</span>
+        <span class="text-stone-600">/</span>
+        <span class="text-stone-500">equipos:</span>
+        <span id="stat-teams" class="text-gold-400 font-bold">2</span>
+      </div>
+      <div class="relative">
+        <button id="btn-config-toggle" class="btn-pixel btn-stone w-9 h-9 flex items-center justify-center text-sm" title="configuración (JSON)">💾</button>
+        <div id="config-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-stone-900 block-border p-3 z-50 animate-pop space-y-2 shadow-2xl">
+          <p class="heading-pixel text-[9px] text-gold-400 mb-2">configuración (.json)</p>
+          <button id="btn-export" class="btn-pixel btn-gold w-full py-2 text-xs">💾 exportar config</button>
+          <button id="btn-import-trigger" class="btn-pixel btn-stone w-full py-2 text-xs">📂 importar config</button>
+          <input type="file" id="input-file-import" accept=".json" class="hidden">
+          <p class="text-stone-500 text-[9px] mt-1 leading-relaxed">Exporta tu archivo JSON para guardarlo o compártelo, e impórtalo cuando quieras retomar.</p>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -101,23 +120,12 @@
   <!-- ===================== SIDEBAR ===================== -->
   <aside class="space-y-6">
 
-    <!-- Configuración / Exportar / Importar -->
+    <!-- Añadir participantes -->
     <section class="bg-stone-800 block-border p-4">
-      <h2 class="heading-pixel text-[10px] text-gold-400 mb-3">configuración (.json)</h2>
-      <div class="space-y-2">
-        <button id="btn-export" class="btn-pixel btn-gold w-full py-2 text-xs">💾 exportar config</button>
-        <button id="btn-import-trigger" class="btn-pixel btn-stone w-full py-2 text-xs">📂 importar config</button>
-        <input type="file" id="input-file-import" accept=".json" class="hidden">
-      </div>
-      <p class="text-stone-600 text-[10px] mt-2 leading-relaxed">Ideal para web pública: exporta tu archivo JSON para guardarlo o compartirlo, e impórtalo cuando quieras retomar la partida.</p>
-    </section>
-
-    <!-- Añadir jugadores -->
-    <section class="bg-stone-800 block-border p-4">
-      <h2 class="heading-pixel text-[10px] text-emerald-500 mb-3">añadir jugador</h2>
+      <h2 class="heading-pixel text-[10px] text-emerald-500 mb-3">añadir participante</h2>
       <form id="form-add-player" class="flex gap-2">
-        <input id="input-player-name" type="text" placeholder="nick del jugador"
-          class="flex-1 min-w-0 bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-3 py-2 text-sm text-stone-100 placeholder-stone-600"
+        <input id="input-player-name" type="text" placeholder="nombre o nick"
+          class="flex-1 min-w-0 bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-3 py-2 text-sm text-stone-100 placeholder-stone-600 transition-colors"
           maxlength="24" autocomplete="off">
         <button type="submit" class="btn-pixel btn-emerald px-3 text-sm shrink-0">+</button>
       </form>
@@ -134,91 +142,98 @@
         <button id="btn-team-plus" class="btn-pixel btn-stone w-9 h-9 text-lg leading-none">+</button>
       </div>
       <button id="btn-shuffle" class="btn-pixel btn-emerald w-full py-2 text-xs">🎲 sortear equipos</button>
-      <button id="btn-shuffle-ep1" class="btn-pixel btn-gold w-full py-2 text-xs mt-2">🟢 repartir ep1 al azar</button>
-      <button id="btn-shuffle-ep5" class="btn-pixel btn-gold w-full py-2 text-xs mt-2">🔴 repartir ep5 al azar</button>
-      <button id="btn-clear-perks" class="btn-pixel btn-stone w-full py-2 text-xs mt-2">🚫 quitar todos los perks</button>
+      <button id="btn-shuffle-ep1" class="btn-pixel btn-gold w-full py-2 text-xs mt-2">🟢 repartir grupo A al azar</button>
+      <button id="btn-shuffle-ep5" class="btn-pixel btn-gold w-full py-2 text-xs mt-2">🔴 repartir grupo B al azar</button>
+      <button id="btn-clear-perks" class="btn-pixel btn-stone w-full py-2 text-xs mt-2">🚫 quitar todos los atributos</button>
       <button id="btn-reset" class="btn-pixel btn-netherite w-full py-2 text-xs mt-2">reiniciar panel</button>
     </section>
 
-    <!-- Jugadores sin asignar -->
+    <!-- Participantes sin asignar -->
     <section class="bg-stone-800 block-border p-4">
       <h2 class="heading-pixel text-[10px] text-stone-300 mb-3">sin equipo</h2>
       <div id="unassigned-list" class="flex flex-wrap gap-2 min-h-[3rem]"></div>
-      <p id="unassigned-empty" class="text-stone-600 text-xs italic">no hay jugadores libres</p>
+      <p id="unassigned-empty" class="text-stone-600 text-xs italic">no hay participantes libres</p>
     </section>
 
-    <!-- Catálogo Personalizado de Perks -->
+    <!-- Catálogo Personalizado de Atributos (Con nombre y descripción visibles) -->
     <section class="bg-stone-800 block-border p-4">
-      <h2 class="heading-pixel text-[10px] text-gold-400 mb-3">crear / editar perks</h2>
-      
-      <!-- Añadir EP1 -->
-      <div class="mb-4">
-        <p class="text-emerald-500 text-xs font-bold mb-1">🟢 nuevo beneficio ep1</p>
-        <form id="form-add-ep1" class="space-y-2">
-          <input id="input-ep1-name" type="text" placeholder="nombre (ej. Flash)"
-            class="w-full bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
-            maxlength="24" autocomplete="off">
-          <input id="input-ep1-desc" type="text" placeholder="descripción corta"
-            class="w-full bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
-            maxlength="50" autocomplete="off">
-          <button type="submit" class="btn-pixel btn-emerald w-full py-1 text-xs">+ añadir ep1</button>
-        </form>
-        <div id="catalog-ep1-list" class="mt-2 space-y-1 max-h-36 overflow-y-auto scrollbar-thin pr-1"></div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="heading-pixel text-[10px] text-gold-400">crear / editar atributos</h2>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="toggle-attributes-section" class="sr-only peer">
+          <div class="w-9 h-5 bg-stone-950 peer-focus:outline-none border-2 border-stone-700 rounded-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-stone-400 after:border-stone-300 after:border after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
       </div>
 
-      <!-- Añadir EP5 -->
-      <div>
-        <p class="text-netherite-500 text-xs font-bold mb-1">🔴 nueva desventaja ep5</p>
-        <form id="form-add-ep5" class="space-y-2">
-          <input id="input-ep5-name" type="text" placeholder="nombre (ej. Ceguera)"
-            class="w-full bg-stone-950 border-2 border-stone-700 focus:border-netherite-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
-            maxlength="24" autocomplete="off">
-          <input id="input-ep5-desc" type="text" placeholder="descripción corta"
-            class="w-full bg-stone-950 border-2 border-stone-700 focus:border-netherite-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
-            maxlength="50" autocomplete="off">
-          <button type="submit" class="btn-pixel btn-netherite w-full py-1 text-xs">+ añadir ep5</button>
-        </form>
-        <div id="catalog-ep5-list" class="mt-2 space-y-1 max-h-36 overflow-y-auto scrollbar-thin pr-1"></div>
+      <div id="attributes-container" class="hidden space-y-4 pt-2 border-t-2 border-stone-700 animate-fade">
+        <!-- Grupo A -->
+        <div>
+          <p class="text-emerald-500 text-xs font-bold mb-1">🟢 nuevo atributo tipo A</p>
+          <form id="form-add-ep1" class="space-y-2">
+            <input id="input-ep1-name" type="text" placeholder="nombre (ej. Veterano)"
+              class="w-full bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
+              maxlength="24" autocomplete="off">
+            <input id="input-ep1-desc" type="text" placeholder="descripción corta"
+              class="w-full bg-stone-950 border-2 border-stone-700 focus:border-emerald-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
+              maxlength="50" autocomplete="off">
+            <button type="submit" class="btn-pixel btn-emerald w-full py-1 text-xs">+ añadir tipo A</button>
+          </form>
+          <div id="catalog-ep1-list" class="mt-2 space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin pr-1"></div>
+        </div>
+
+        <!-- Grupo B -->
+        <div>
+          <p class="text-netherite-500 text-xs font-bold mb-1">🔴 nuevo atributo tipo B</p>
+          <form id="form-add-ep5" class="space-y-2">
+            <input id="input-ep5-name" type="text" placeholder="nombre (ej. Novato)"
+              class="w-full bg-stone-950 border-2 border-stone-700 focus:border-netherite-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
+              maxlength="24" autocomplete="off">
+            <input id="input-ep5-desc" type="text" placeholder="descripción corta"
+              class="w-full bg-stone-950 border-2 border-stone-700 focus:border-netherite-500 outline-none px-2 py-1.5 text-xs text-stone-100 placeholder-stone-600"
+              maxlength="50" autocomplete="off">
+            <button type="submit" class="btn-pixel btn-netherite w-full py-1 text-xs">+ añadir tipo B</button>
+          </form>
+          <div id="catalog-ep5-list" class="mt-2 space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin pr-1"></div>
+        </div>
       </div>
+      <p id="attributes-disabled-msg" class="text-stone-600 text-[10px] italic mt-1">Sección desactivada. Actívala arriba para crear o editar atributos.</p>
     </section>
 
   </aside>
 
   <!-- ===================== CONTENIDO PRINCIPAL ===================== -->
   <section class="space-y-6">
-    <!-- Grid de Equipos -->
     <div id="teams-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"></div>
 
-    <!-- Sección de Asignación Manual de Perks -->
     <div class="bg-stone-800 block-border p-5 mt-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4 pb-3 border-b-2 border-stone-700">
         <div>
-          <h2 class="heading-pixel text-xs text-gold-400">⚡ asignación manual de perks</h2>
-          <p class="text-stone-400 text-xs mt-1">Elige los perks creados de tu lista para cada jugador de forma manual si lo prefieres.</p>
+          <h2 class="heading-pixel text-xs text-gold-400">⚡ asignación manual de atributos</h2>
+          <p class="text-stone-400 text-xs mt-1">Elige los atributos creados para cada participante de forma manual si lo prefieres.</p>
         </div>
       </div>
       <div id="perks-manager-list" class="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin pr-2">
-        <p class="text-stone-600 text-xs italic">No hay jugadores registrados todavía.</p>
+        <p class="text-stone-600 text-xs italic">No hay participantes registrados todavía.</p>
       </div>
     </div>
   </section>
 
 </main>
 
-<!-- ===================== MODAL SELECTOR DE PERKS ===================== -->
-<div id="perk-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
-  <div class="bg-stone-900 block-border w-full max-w-md max-h-[80vh] flex flex-col pop-in">
+<!-- ===================== MODAL SELECTOR DE ATRIBUTOS ===================== -->
+<div id="perk-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 animate-fade">
+  <div class="bg-stone-900 block-border w-full max-w-md max-h-[80vh] flex flex-col animate-pop shadow-2xl">
     <div class="flex items-center justify-between px-4 py-3 border-b-2 border-stone-700">
-      <h3 id="modal-title" class="heading-pixel text-[10px]">seleccionar perk</h3>
-      <button id="modal-close" class="text-stone-400 hover:text-stone-100 text-lg leading-none px-2">✕</button>
+      <h3 id="modal-title" class="heading-pixel text-[10px]">seleccionar atributo</h3>
+      <button id="modal-close" class="text-stone-400 hover:text-stone-100 text-lg leading-none px-2 transition-colors">✕</button>
     </div>
     <div id="modal-list" class="overflow-y-auto scrollbar-thin p-3 space-y-2"></div>
   </div>
 </div>
 
 <!-- ===================== MODAL DE CONFIRMACIÓN ===================== -->
-<div id="confirm-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
-  <div class="bg-stone-900 block-border w-full max-w-sm pop-in">
+<div id="confirm-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 animate-fade">
+  <div class="bg-stone-900 block-border w-full max-w-sm animate-pop shadow-2xl">
     <div class="px-4 py-3 border-b-2 border-stone-700">
       <h3 class="heading-pixel text-[10px] text-netherite-500">confirmar</h3>
     </div>
@@ -236,13 +251,13 @@
 (function(){
   "use strict";
 
-  const STORAGE_KEY = "uhc_panel_public_config_v1";
+  const STORAGE_KEY = "general_panel_config_v1";
   let state = loadState() || {
-    players: [],       // [{ id, name, team: number|null, ep1: id|null, ep5: id|null }]
-    ep1List: [],       // [{ id, name, desc }]
-    ep5List: [],       // [{ id, name, desc }]
+    players: [],
+    ep1List: [],
+    ep5List: [],
     teamCount: 2,
-    teamNames: {}      // { teamIndex: "nombre" }
+    teamNames: {}
   };
 
   function loadState(){
@@ -279,9 +294,14 @@
     btnShuffleEp5: document.getElementById("btn-shuffle-ep5"),
     btnClearPerks: document.getElementById("btn-clear-perks"),
     btnReset: document.getElementById("btn-reset"),
+    btnConfigToggle: document.getElementById("btn-config-toggle"),
+    configDropdown: document.getElementById("config-dropdown"),
     btnExport: document.getElementById("btn-export"),
     btnImportTrigger: document.getElementById("btn-import-trigger"),
     inputFileImport: document.getElementById("input-file-import"),
+    toggleAttributes: document.getElementById("toggle-attributes-section"),
+    attributesContainer: document.getElementById("attributes-container"),
+    attributesDisabledMsg: document.getElementById("attributes-disabled-msg"),
     statPlayers: document.getElementById("stat-players"),
     statTeams: document.getElementById("stat-teams"),
     modal: document.getElementById("perk-modal"),
@@ -314,7 +334,7 @@
   function getPerkDisplayText(p, type) {
     const list = type === "ep1" ? state.ep1List : state.ep5List;
     const val = p[type];
-    if (!val) return type === "ep1" ? "asignar ep1" : "asignar ep5";
+    if (!val) return type === "ep1" ? "asignar tipo A" : "asignar tipo B";
     const found = perkById(list, val);
     return found ? found.name : "desconocido";
   }
@@ -331,22 +351,29 @@
     saveState();
   }
 
+  // Renderizado del catálogo de atributos mostrando nombre y descripción juntos
   function renderCatalogLists(){
     els.catalogEp1List.innerHTML = state.ep1List.length === 0 
-      ? `<span class="text-stone-600 text-[10px] italic">No hay EP1 creados</span>`
+      ? `<span class="text-stone-600 text-[10px] italic">No hay atributos A creados</span>`
       : state.ep1List.map(p => `
-          <div class="flex items-center justify-between bg-stone-950 border border-stone-700 px-2 py-1 text-[11px]">
-            <span class="text-emerald-400 font-bold truncate mr-1" title="${escapeHtml(p.desc)}">${escapeHtml(p.name)}</span>
-            <button data-delete-ep1="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1" title="Eliminar">✕</button>
+          <div class="bg-stone-950 border border-stone-700 p-2 flex items-start justify-between gap-2 animate-fade">
+            <div class="min-w-0 flex-1">
+              <span class="text-emerald-400 font-bold text-xs block truncate">${escapeHtml(p.name)}</span>
+              <span class="text-stone-400 text-[10px] block leading-tight mt-0.5">${escapeHtml(p.desc)}</span>
+            </div>
+            <button data-delete-ep1="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1 shrink-0 transition-colors" title="Eliminar">✕</button>
           </div>
         `).join("");
 
     els.catalogEp5List.innerHTML = state.ep5List.length === 0 
-      ? `<span class="text-stone-600 text-[10px] italic">No hay EP5 creados</span>`
+      ? `<span class="text-stone-600 text-[10px] italic">No hay atributos B creados</span>`
       : state.ep5List.map(p => `
-          <div class="flex items-center justify-between bg-stone-950 border border-stone-700 px-2 py-1 text-[11px]">
-            <span class="text-netherite-500 font-bold truncate mr-1" title="${escapeHtml(p.desc)}">${escapeHtml(p.name)}</span>
-            <button data-delete-ep5="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1" title="Eliminar">✕</button>
+          <div class="bg-stone-950 border border-stone-700 p-2 flex items-start justify-between gap-2 animate-fade">
+            <div class="min-w-0 flex-1">
+              <span class="text-netherite-500 font-bold text-xs block truncate">${escapeHtml(p.name)}</span>
+              <span class="text-stone-400 text-[10px] block leading-tight mt-0.5">${escapeHtml(p.desc)}</span>
+            </div>
+            <button data-delete-ep5="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1 shrink-0 transition-colors" title="Eliminar">✕</button>
           </div>
         `).join("");
 
@@ -393,12 +420,12 @@
       options += `<option value="${i}">${escapeHtml(teamName(i))}</option>`;
     }
     return `
-      <div class="flex items-center gap-1 bg-stone-950 border-2 border-stone-700 pl-3 pr-1 py-1.5 text-xs">
+      <div class="flex items-center gap-1 bg-stone-950 border-2 border-stone-700 pl-3 pr-1 py-1.5 text-xs animate-pop chip-transition">
         <span class="mr-1">${escapeHtml(p.name)}</span>
         <select data-assign="${p.id}" class="bg-stone-800 border border-stone-600 text-[10px] px-1 py-0.5 outline-none">
           ${options}
         </select>
-        <button data-remove="${p.id}" class="text-stone-500 hover:text-netherite-500 px-1" title="eliminar">✕</button>
+        <button data-remove="${p.id}" class="text-stone-500 hover:text-netherite-500 px-1 transition-colors" title="eliminar">✕</button>
       </div>`;
   }
 
@@ -410,7 +437,7 @@
       const color = TEAM_COLORS[i % TEAM_COLORS.length];
       const members = state.players.filter(p => p.team === i);
       html += `
-        <div class="bg-stone-800 block-border flex flex-col">
+        <div class="bg-stone-800 block-border flex flex-col animate-fade">
           <div class="${color.bar} px-3 py-2 flex items-center justify-between border-b-4 border-stone-950">
             <input data-team-name="${i}" value="${escapeHtml(teamName(i))}"
               class="bg-transparent font-bold text-sm text-stone-950 outline-none w-full mr-2"
@@ -455,12 +482,12 @@
     const hasEp5 = Boolean(p.ep5);
 
     return `
-      <div class="bg-stone-950 border-2 border-stone-700 p-2">
+      <div class="bg-stone-950 border-2 border-stone-700 p-2 animate-pop">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-sm font-medium truncate">${escapeHtml(p.name)}</span>
           <div class="flex items-center gap-1 shrink-0">
-            <button data-unassign="${p.id}" class="text-stone-500 hover:text-gold-400 text-xs px-1" title="quitar del equipo">↩</button>
-            <button data-remove="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1" title="eliminar">✕</button>
+            <button data-unassign="${p.id}" class="text-stone-500 hover:text-gold-400 text-xs px-1 transition-colors" title="quitar del equipo">↩</button>
+            <button data-remove="${p.id}" class="text-stone-500 hover:text-netherite-500 text-xs px-1 transition-colors" title="eliminar">✕</button>
           </div>
         </div>
         <div class="flex flex-wrap gap-1.5">
@@ -478,25 +505,25 @@
 
   function renderPerksManager() {
     if (state.players.length === 0) {
-      els.perksManagerList.innerHTML = `<p class="text-stone-600 text-xs italic">No hay jugadores registrados todavía.</p>`;
+      els.perksManagerList.innerHTML = `<p class="text-stone-600 text-xs italic">No hay participantes registrados todavía.</p>`;
       return;
     }
 
     els.perksManagerList.innerHTML = state.players.map(p => {
       const teamLabel = p.team !== null ? teamName(p.team) : "Sin equipo";
       
-      let ep1Options = `<option value="">-- Sin EP1 --</option>`;
+      let ep1Options = `<option value="">-- Sin asignar --</option>`;
       state.ep1List.forEach(perk => {
         ep1Options += `<option value="${perk.id}" ${p.ep1 === perk.id ? 'selected' : ''}>${escapeHtml(perk.name)}</option>`;
       });
 
-      let ep5Options = `<option value="">-- Sin EP5 --</option>`;
+      let ep5Options = `<option value="">-- Sin asignar --</option>`;
       state.ep5List.forEach(perk => {
         ep5Options += `<option value="${perk.id}" ${p.ep5 === perk.id ? 'selected' : ''}>${escapeHtml(perk.name)}</option>`;
       });
 
       return `
-        <div class="bg-stone-950 border-2 border-stone-700 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="bg-stone-950 border-2 border-stone-700 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 animate-fade">
           <div class="min-w-[140px]">
             <span class="text-sm font-bold text-stone-200 block">${escapeHtml(p.name)}</span>
             <span class="text-[10px] text-stone-500 uppercase tracking-wider">${escapeHtml(teamLabel)}</span>
@@ -546,16 +573,16 @@
     const current = player ? player[type] : null;
     const accent = type === "ep1" ? "emerald" : "netherite";
 
-    els.modalTitle.textContent = (type === "ep1" ? "🟢 seleccionar ep1 — " : "🔴 seleccionar ep5 — ") + (player ? player.name : "");
+    els.modalTitle.textContent = (type === "ep1" ? "🟢 seleccionar tipo A — " : "🔴 seleccionar tipo B — ") + (player ? player.name : "");
     
     if (list.length === 0) {
-      els.modalList.innerHTML = `<p class="text-stone-500 text-xs italic text-center py-4">No hay perks creados todavía.</p>`;
+      els.modalList.innerHTML = `<p class="text-stone-500 text-xs italic text-center py-4">No hay atributos creados todavía.</p>`;
     } else {
       els.modalList.innerHTML = `
         <button data-perk-choice="__clear__" class="w-full text-left btn-pixel btn-stone px-3 py-2 text-xs mb-1">sin asignar / limpiar</button>
       ` + list.map(p => `
         <button data-perk-choice="${p.id}"
-          class="w-full text-left px-3 py-2 border-2 ${current===p.id ? `border-${accent}-500 bg-${accent}-700/40` : 'border-stone-700 bg-stone-950'} hover:border-${accent}-500 text-xs">
+          class="w-full text-left px-3 py-2 border-2 ${current===p.id ? `border-${accent}-500 bg-${accent}-700/40` : 'border-stone-700 bg-stone-950'} hover:border-${accent}-500 text-xs transition-colors">
           <span class="font-bold ${accent==='emerald' ? 'text-emerald-400':'text-netherite-500'}">${escapeHtml(p.name)}</span>
           <div class="text-stone-400 mt-0.5">${escapeHtml(p.desc)}</div>
         </button>
@@ -582,7 +609,18 @@
 
   els.modalClose.addEventListener("click", closeModal);
   els.modal.addEventListener("click", e => { if (e.target === els.modal) closeModal(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); hideConfirm(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); hideConfirm(); els.configDropdown.classList.add("hidden"); } });
+
+  els.btnConfigToggle.addEventListener("click", e => {
+    e.stopPropagation();
+    els.configDropdown.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", e => {
+    if (!els.configDropdown.contains(e.target) && e.target !== els.btnConfigToggle) {
+      els.configDropdown.classList.add("hidden");
+    }
+  });
 
   function addPlayer(name){
     name = name.trim();
@@ -654,28 +692,28 @@
 
   function clearAllPerks(){
     if (state.players.length === 0) return;
-    showConfirm("¿Quitar TODOS los EP1 y EP5 asignados?", () => {
+    showConfirm("¿Quitar TODOS los atributos asignados?", () => {
       state.players.forEach(p => { p.ep1 = null; p.ep5 = null; });
       render();
     });
   }
 
   function resetPanel(){
-    showConfirm("¿Reiniciar todo el panel? Se perderán jugadores, equipos y perks actuales.", () => {
+    showConfirm("¿Reiniciar todo el panel? Se perderán participantes, equipos y atributos actuales.", () => {
       state = { players: [], ep1List: [], ep5List: [], teamCount: 2, teamNames: {} };
       render();
     });
   }
 
-  // ---------- EXPORTAR / IMPORTAR CONFIGURACIÓN JSON ----------
   function exportConfig(){
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "uhc_config_" + new Date().toISOString().slice(0,10) + ".json");
+    dlAnchor.setAttribute("download", "panel_config_" + new Date().toISOString().slice(0,10) + ".json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
+    els.configDropdown.classList.add("hidden");
   }
 
   function triggerImport(){
@@ -694,17 +732,17 @@
           render();
           alert("¡Configuración importada con éxito!");
         } else {
-          alert("El archivo JSON no tiene un formato de configuración UHC válido.");
+          alert("El archivo JSON no tiene un formato válido.");
         }
       } catch(err) {
         alert("Error al leer el archivo JSON.");
       }
       els.inputFileImport.value = "";
+      els.configDropdown.classList.add("hidden");
     };
     reader.readAsText(file);
   });
 
-  // ---------- MODAL DE CONFIRMACIÓN ----------
   let confirmAcceptHandler = null;
   let confirmCancelHandler = null;
 
@@ -730,7 +768,12 @@
 
   els.confirmModal.addEventListener("click", e => { if (e.target === els.confirmModal) hideConfirm(); });
 
-  // ---------- EVENTOS ----------
+  els.toggleAttributes.addEventListener("change", e => {
+    const checked = e.target.checked;
+    els.attributesContainer.classList.toggle("hidden", !checked);
+    els.attributesDisabledMsg.classList.toggle("hidden", checked);
+  });
+
   els.form.addEventListener("submit", e => {
     e.preventDefault();
     addPlayer(els.input.value);
@@ -768,7 +811,7 @@
   els.btnClearPerks.addEventListener("click", clearAllPerks);
   els.btnReset.addEventListener("click", resetPanel);
   els.btnExport.addEventListener("click", exportConfig);
-  els.btnImportTrigger.addEventListener("click", triggerImport);
+  document.getElementById("btn-import-trigger").addEventListener("click", triggerImport);
 
   render();
 })();
